@@ -79,7 +79,7 @@ def aggregate_session_times(data):
 
 def reorder_and_clean_name_number(data):
     """
-    '사용자 이름(원래 이름)'에서 이름과 숫자(8자리)의 순서를 바꾸고, 구분 문자를 삭제하는 함수.
+    '사용자 이름(원래 이름)'에서 이름과 숫자(10자리)의 순서를 바꾸고, 구분 문자를 삭제하는 함수.
     
     Parameters:
     - data (pd.DataFrame): 집계된 웨비나 참석자 데이터를 담고 있는 DataFrame 객체.
@@ -90,7 +90,7 @@ def reorder_and_clean_name_number(data):
     def clean_and_reorder_name(name):
         # 숫자와 이름 사이의 구분 문자(공백, '/', '-', '_') 제거 후 순서 바꾸기
         import re
-        # 패턴: 이름 [구분 문자] 숫자(8자리)
+        # 패턴: 이름 [구분 문자] 숫자(10자리)
         pattern = re.compile(r"([^\d/\-_]+)[/\-_ ]*(\d{10})")
         match = pattern.search(name)
         if match:
@@ -132,7 +132,7 @@ def remove_separators_from_names(data):
 import re
 def filter_and_return_special_cases_with_reason(data):
     """
-    조건(이름만 있거나, 숫자만 있거나, 숫자와 이름 형식이지만 숫자가 8자리가 아닌 경우)에 해당하는 행을 찾아서
+    조건(이름만 있거나, 숫자만 있거나, 숫자와 이름 형식이지만 숫자가 10자리가 아닌 경우)에 해당하는 행을 찾아서
     해당 '사용자 이름(원래 이름)', '세션 기간(분)', 그리고 원인을 리스트로 반환하고,
     이 행들을 원본 데이터프레임에서 제거한 후 수정된 데이터프레임을 반환하는 함수.
 
@@ -154,8 +154,10 @@ def filter_and_return_special_cases_with_reason(data):
             return "이름만 있음"
         elif re.fullmatch(r'\d+', name):
             return "숫자만 있음"
+        elif not re.match(r'\d{10}', name):
+            return "학번이름이 올바르지 않음."
         elif re.search(r'(?:(?:\D+\d+)|(\d+\D+))\d*', name) and not re.match(r'\d{10}', name):
-            return "숫자가 8자리가 아닌 숫자+이름 형식"
+            return "숫자가 10자리가 아닌 숫자+이름 형식"
         return None
 
     # 조건에 맞는 행 찾기
@@ -208,7 +210,7 @@ def merge_special_cases_with_main_data_updated(filtered_df, special_cases):
 
 def add_space_between_id_and_name(data):
     """
-    '사용자 이름(원래 이름)' 열에서 학번(숫자 8자리)과 이름 사이에 공백을 추가하는 함수.
+    '사용자 이름(원래 이름)' 열에서 학번(숫자 10자리)과 이름 사이에 공백을 추가하는 함수.
 
     Parameters:
     dataframe (pd.DataFrame): 입력 데이터프레임
