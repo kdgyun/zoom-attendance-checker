@@ -19,7 +19,18 @@ or
 git clone git@github.com:kdgyun/zoom-attendance-checker.git
 ```
 
-### 2. Run the Script
+<br>
+
+### 2. Navigate to the cloned repository directory and install the required Python packages:
+
+```sg
+cd zoom-attendance-checker
+pip install -r requirements.txt
+```
+
+<br>
+
+### 3. Run the Script
 
 Navigate to the directory containing main.py and run it with the following options:
 
