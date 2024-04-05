@@ -5,12 +5,11 @@
 
 ### Please note!
 
-The attendee report of a Zoom webinar is saved as a CSV file, but due to inconsistent data formats within, it may not open correctly. 
+The attendee report of a Zoom webinar is saved as a CSV file, but it may not open correctly due to inconsistent data formats within. 
 
-In such cases, opening the "attendance.csv" file in MS Excel and then simply saving it without any modifications will prompt Excel to automatically convert and save the data in the correct format.
+For this issue, just opening the "attendance.csv" file in MS Excel and then saving it without any additional actions will allow Excel to automatically convert and save the data in the appropriate format, thus resolving the problem.
 
 It is recommended to preprocess the file using the above method before using the program.
-
 
 <br>
 
