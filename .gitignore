@@ -2,3 +2,4 @@ result.*
 /test
 *.xlsx
 venv
+.DS_Store

@@ -1,9 +1,13 @@
 import sys
 import pandas as pd
+from pandas.errors import ParserError
 
 def read_csv(file_path):
     try:
         data = pd.read_csv(file_path)
+    except ParserError as e:
+        print("파일 데이터 형식문제입니다.\n대부분 해당 csv파일을 MS Excel로 연 뒤, 저장만 해줘도 형식에 맞게 데이터 형식을 맞춰주므로, 해당 방법을 시도해보는 것을 권장합니다.")
+        exit(1)
     except:
         print("No such file : ", file_path)
         exit(1)
