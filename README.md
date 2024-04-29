@@ -11,6 +11,8 @@ For this issue, just opening the "attendance.csv" file in MS Excel and then savi
 
 It is recommended to preprocess the file using the above method before using the program.
 
+And, The format for names is a number followed by a name (e.g., 2024012345 GildongHong).
+
 <br>
 
 
@@ -47,8 +49,9 @@ pip install -r requirements.txt
 Navigate to the directory containing main.py and run it with the following options:
 
 - **-h / --help**: Show help message and exit.
-- **-p: (Required)** Path to the CSV file.
-- **-t: (Optional)** Minimum required attendance percentage (default is 70%).
+- **-p / --path: (Required)** Path to the CSV file.
+- **-t / --threshold: (Optional)** Minimum required attendance percentage (default is 70%).
+- **-l / --length: (Optional)** Length of the unique number (e.g., student ID number). If not specified, a default length is assumed 10.
 
 
 #### Examples:

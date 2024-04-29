@@ -2,6 +2,8 @@ import sys
 import pandas as pd
 from pandas.errors import ParserError
 
+digit_count = 10
+
 def read_csv(file_path):
     try:
         data = pd.read_csv(file_path)
@@ -82,6 +84,7 @@ def aggregate_session_times(data):
 
 
 def reorder_and_clean_name_number(data):
+    global digit_count
     """
     '사용자 이름(원래 이름)'에서 이름과 숫자(10자리)의 순서를 바꾸고, 구분 문자를 삭제하는 함수.
     
@@ -92,10 +95,12 @@ def reorder_and_clean_name_number(data):
     - cleaned_data (pd.DataFrame): 이름과 숫자 순서가 바뀌고, 구분 문자가 삭제된 '사용자 이름(원래 이름)'을 갖는 데이터프레임.
     """
     def clean_and_reorder_name(name):
+        global digit_count
         # 숫자와 이름 사이의 구분 문자(공백, '/', '-', '_') 제거 후 순서 바꾸기
         import re
         # 패턴: 이름 [구분 문자] 숫자(10자리)
-        pattern = re.compile(r"([^\d/\-_]+)[/\-_ ]*(\d{10})")
+        pattern_text = fr"([^\d/\-_]+)[/\-_ ]*(\d{{{digit_count}}})"
+        pattern = re.compile(pattern_text)
         match = pattern.search(name)
         if match:
             # 순서 바꾸기 (숫자, 이름) 및 구분 문자 삭제
@@ -135,6 +140,7 @@ def remove_separators_from_names(data):
 
 import re
 def filter_and_return_special_cases_with_reason(data):
+    global digit_count
     """
     조건(이름만 있거나, 숫자만 있거나, 숫자와 이름 형식이지만 숫자가 10자리가 아닌 경우)에 해당하는 행을 찾아서
     해당 '사용자 이름(원래 이름)', '세션 기간(분)', 그리고 원인을 리스트로 반환하고,
@@ -151,16 +157,18 @@ def filter_and_return_special_cases_with_reason(data):
 
     # 조건에 따른 필터링을 위한 함수
     def filter_condition(name):
+        global digit_count
         pattern = r'[\u1100-\u1112\u1161-\u1175\u11A8-\u11C2\u3131-\u314E\u3165-\u318E]' # 한글 자모음 유니코드
+        pattern_text = fr"\d{{{digit_count}}}"
         if re.search(pattern, name):
             return "올바르지 않은 문자"
         elif re.fullmatch(r'[가-힣a-zA-Z]+', name):
             return "이름만 있음"
         elif re.fullmatch(r'\d+', name):
             return "숫자만 있음"
-        elif not re.match(r'\d{10}', name):
+        elif not re.match(pattern_text, name):
             return "학번이름이 올바르지 않음."
-        elif re.search(r'(?:(?:\D+\d+)|(\d+\D+))\d*', name) and not re.match(r'\d{10}', name):
+        elif re.search(r'(?:(?:\D+\d+)|(\d+\D+))\d*', name) and not re.match(pattern_text, name):
             return "숫자가 10자리가 아닌 숫자+이름 형식"
         return None
 
@@ -213,6 +221,7 @@ def merge_special_cases_with_main_data_updated(filtered_df, special_cases):
     return filtered_df, remaining_special_cases
 
 def add_space_between_id_and_name(data):
+    global digit_count
     """
     '사용자 이름(원래 이름)' 열에서 학번(숫자 10자리)과 이름 사이에 공백을 추가하는 함수.
 
@@ -222,12 +231,14 @@ def add_space_between_id_and_name(data):
     Returns:
     pd.DataFrame: 수정된 데이터프레임
     """
+    pattern_text = fr'(\d{{{digit_count}}})([가-힣a-zA-Z]+)'
     # 학번과 이름 사이에 공백 추가
-    data['사용자 이름(원래 이름)'] = data['사용자 이름(원래 이름)'].apply(lambda x: re.sub(r'(\d{10})([가-힣a-zA-Z]+)', r'\1 \2', x))
+    data['사용자 이름(원래 이름)'] = data['사용자 이름(원래 이름)'].apply(lambda x: re.sub(pattern_text, r'\1 \2', x))
     
     return data
 
 def save_to_excel(final_df, special_cases_with_reason, file_path):
+    global digit_count
     """
     '사용자 이름(원래 이름)'을 학번과 이름으로 분리하여 엑셀 파일로 저장하는 함수.
     
@@ -236,8 +247,10 @@ def save_to_excel(final_df, special_cases_with_reason, file_path):
     special_cases_with_reason (list): 스페셜 케이스와 그 원인이 포함된 리스트
     file_path (str): 저장할 엑셀 파일의 경로
     """
+    pattern_text = fr'(?P<학번>\d{{{digit_count}}})?\s?(?P<이름>[가-힣a-zA-Z]+)'
+
     # 학번과 이름 분리
-    split_data = final_df['사용자 이름(원래 이름)'].str.extract(r'(?P<학번>\d{10})?\s?(?P<이름>[가-힣a-zA-Z]+)')
+    split_data = final_df['사용자 이름(원래 이름)'].str.extract(pattern_text)
     # 닉네임은 원래 이름에 유지
     split_data['닉네임'] = final_df['사용자 이름(원래 이름)']
     # 세션 기간(분) 추가
@@ -284,33 +297,39 @@ def add_attendance_status_based_on_threshold(data, threshold, class_duration):
 import argparse
 
 def main():
+    global digit_count
     # ArgumentParser 객체 생성
     parser = argparse.ArgumentParser(description='Process some integers.')
 
     # '-path' 인자 추가: 파일 경로, 기본값 설정
-    parser.add_argument('-p', type=str, help='Path to the csv file', default=None, required=True, metavar='path of csv file')
+    parser.add_argument('-p', '--path', type=str, help='Path to the csv file', default=None, required=True, metavar='path of csv file')
 
     # '-t' 인자 추가: 임계값, 기본값 설정
-    parser.add_argument('-t', type=int, help='(Optional) Minimum required attendance percentage (default : 70)', default=70, metavar='threshold')
+    parser.add_argument('-t', '--threshold', type=int, help='(Optional) Minimum required attendance percentage (default : 70)', default=70, metavar='threshold')
+
+    # '-l' 인자 추가: 학번(고유번호) 길이 설정
+    parser.add_argument('-l', '--length', type=int, help='(Optional) Minimum required attendance percentage (default : 70)', default=70, metavar='threshold')
 
     # 인자 파싱
     args = parser.parse_args()
     threshold = 0
     # 인자 존재 여부 확인
-    if args.p is not None:
-        pass
-    else:
+    if args.path is None:
         print('No file path provided.')
-
-    if args.t is None:
+        exit(1)
+       
+    if args.threshold is None:
         pass
-    elif int(args.t) > 100 or int(args.t) < 0:
-        print("usage: main.py [-h] -p PATH -t T\nmain.py: error: Invalid literal for int() between 0 and 100 -t")
+    elif int(args.threshold) > 100 or int(args.threshold) < 0:
+        print("usage: main.py [-h] -p PATH -t T\nmain.py: error: Invalid literal for int() between 0 and 100 --threshold / -t")
         exit(1)
     else:
-        threshold = args.t
-    
-    data = read_csv(file_path=args.p)
+        threshold = args.threshold
+
+    if args.length is not None:
+        digit_count = int(args.length)
+
+    data = read_csv(file_path=args.path)
     # 기본 정보 
     duration = find_actual_duration(data)
     report_date = extract_report_date(data)
